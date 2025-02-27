@@ -3,6 +3,19 @@ import pandas as pd
 import time
 import pytz
 from datetime import datetime, timedelta
+import sys
+
+
+
+# Get the trading symbol from command-line arguments
+if len(sys.argv) < 2:
+    print("Usage: python child.py <symbol>")
+    sys.exit(1)
+
+symbol = sys.argv[1]
+
+# Simulate processing for this symbol
+print(f"Processing trades for {symbol}...")
 
 # Connect to MT5
 if not mt5.initialize():
@@ -10,10 +23,10 @@ if not mt5.initialize():
     quit()
 
 # Configurable variables
-symbols = ["BTCUSDm", "EURUSDm", "GBPUSDm", "USDJPYm", "USDCADm", "AUDUSDm", "NZDUSDm", "XAUUSDm", "USTECm", "USOILm"]
+symbols = [symbol]
 lot_size = 0.09
 profit_target = 1  # Exit when profit reaches $20
-sl_trailing_trigger = 1  # Move SL and TP when profit moves by $10
+sl_trailing_trigger = 10  # Move SL and TP when profit moves by $10
 sl_trailing_adjustment = 2  # Move SL and TP by $2 when trailing triggers
 timeframe = mt5.TIMEFRAME_M1  # 1-minute timeframe
 interval_minutes = 1  # Should match the selected timeframe
@@ -36,25 +49,42 @@ def get_open_trade(symbol):
 def close_trade(symbol):
     """Close the existing trade for the given symbol"""
     trade = get_open_trade(symbol)
-    if trade:
-        order_type = mt5.ORDER_TYPE_SELL if trade.type == mt5.ORDER_TYPE_BUY else mt5.ORDER_TYPE_BUY
-        close_request = {
-            "action": mt5.TRADE_ACTION_DEAL,
-            "symbol": symbol,
-            "volume": trade.volume,
-            "type": order_type,
-            "price": mt5.symbol_info_tick(symbol).bid if order_type == mt5.ORDER_TYPE_SELL else mt5.symbol_info_tick(symbol).ask,
-            "deviation": 10,
-            "magic": 123456,
-            "comment": "Closing trade for new opposite signal",
-            "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
-        }
-        result = mt5.order_send(close_request)
-        if result.retcode == mt5.TRADE_RETCODE_DONE:
-            print(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Closed previous trade for {symbol}")
-            return True
-    return False
+    if not trade:
+        print(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] No open trade found for {symbol}, skipping close request.")
+        return False  # No trade to close
+
+    order_type = mt5.ORDER_TYPE_SELL if trade.type == mt5.ORDER_TYPE_BUY else mt5.ORDER_TYPE_BUY
+    close_price = mt5.symbol_info_tick(symbol).bid if order_type == mt5.ORDER_TYPE_SELL else mt5.symbol_info_tick(symbol).ask
+
+    if close_price is None:
+        print(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Failed to get close price for {symbol}.")
+        return False
+
+    close_request = {
+        "action": mt5.TRADE_ACTION_DEAL,
+        "symbol": symbol,
+        "volume": trade.volume,
+        "type": order_type,
+        "price": close_price,
+        "deviation": 10,
+        "magic": 123456,
+        "comment": "Closing trade for new opposite signal",
+        "type_time": mt5.ORDER_TIME_GTC,
+        "type_filling": mt5.ORDER_FILLING_IOC,
+    }
+
+    result = mt5.order_send(close_request)
+
+    if result is None:
+        print(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Order send failed for {symbol}.")
+        return False
+
+    if result.retcode == mt5.TRADE_RETCODE_DONE:
+        print(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Successfully closed trade for {symbol}.")
+        return True
+    else:
+        print(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Close trade failed for {symbol}, error code: {result.retcode}")
+        return False
 
 def get_data(symbol):
     rates = mt5.copy_rates_from_pos(symbol, timeframe, 0, 6)
