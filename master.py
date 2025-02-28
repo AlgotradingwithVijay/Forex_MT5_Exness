@@ -5,7 +5,7 @@ import time
 
 # Dictionary storing different parameters for each symbol
 symbol_configs = {
-    "BTCUSDm":   {"lot_size": 0.09, "profit_target": 5, "sl_trailing_trigger": 10, "sl_trailing_adjustment": 2, "timeframe": "M1", "interval_minutes": 1,"sl": 3,"tp": 1},
+    "BTCUSDm":   {"lot_size": 0.05, "profit_target": 5, "sl_trailing_trigger": 10, "sl_trailing_adjustment": 2, "timeframe": "M1", "interval_minutes": 1,"sl": 100,"tp": 200},
     "EURUSDm":   {"lot_size": 0.03,  "profit_target": 3, "sl_trailing_trigger": 8,  "sl_trailing_adjustment": 1.5, "timeframe": "M1", "interval_minutes": 1,"sl": 0.04,"tp": 0.04},
     "GBPUSDm":   {"lot_size": 0.03, "profit_target": 4, "sl_trailing_trigger": 9,  "sl_trailing_adjustment": 1.8, "timeframe": "M1", "interval_minutes": 1,"sl": 3,"tp": 1},
     "USDJPYm":   {"lot_size": 0.07, "profit_target": 6, "sl_trailing_trigger": 12, "sl_trailing_adjustment": 2.5, "timeframe": "M1", "interval_minutes": 1,"sl": 3,"tp": 1},
