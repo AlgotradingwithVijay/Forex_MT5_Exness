@@ -24,6 +24,7 @@ interval_minutes = int(sys.argv[7])
 sl = float(sys.argv[8])
 tp = float(sys.argv[9])
 
+
 # Map timeframe
 timeframe_map = {"M1": mt5.TIMEFRAME_M1, "M5": mt5.TIMEFRAME_M5, "M15": mt5.TIMEFRAME_M15, "M30": mt5.TIMEFRAME_M30}
 timeframe = timeframe_map.get(timeframe_str, mt5.TIMEFRAME_M1)
@@ -48,7 +49,7 @@ if not mt5.initialize():
 
 # Timezone
 ist = pytz.timezone("Asia/Kolkata")
-
+logging.info(f"symbol: {symbol}, lot_size: {lot_size}, profit_target: {profit_target}, sl_trailing_trigger: {sl_trailing_trigger}, sl_trailing_adjustment: {sl_trailing_adjustment}, timeframe_str: {timeframe_str}, interval_minutes: {interval_minutes}, sl: {sl}, tp: {tp}")
 def log_trade_to_csv(action, order_type, price, volume, result, retcode=None, ticket=None):
     file_path = os.path.join("logs", "Trades.csv")
     file_exists = os.path.isfile(file_path)
