@@ -63,6 +63,10 @@ def get_open_trade_type():
 
 def close_all_trades():
     positions = mt5.positions_get(symbol=symbol)
+    if not positions:
+        return  # Nothing to close
+
+    logging.info(f"Attempting to close all trades for {symbol}. Total open trades: {len(positions)}")
     for pos in positions:
         order_type = mt5.ORDER_TYPE_SELL if pos.type == mt5.ORDER_TYPE_BUY else mt5.ORDER_TYPE_BUY
         price = mt5.symbol_info_tick(symbol).bid if order_type == mt5.ORDER_TYPE_SELL else mt5.symbol_info_tick(symbol).ask
@@ -72,6 +76,7 @@ def close_all_trades():
             "symbol": symbol,
             "volume": pos.volume,
             "type": order_type,
+            "position": pos.ticket,
             "price": price,
             "deviation": 10,
             "magic": 123456,
@@ -86,17 +91,29 @@ def close_all_trades():
         else:
             logging.error(f"Failed to close trade {pos.ticket}, retcode: {result.retcode}")
 
+    # Wait briefly to allow server sync
+    time.sleep(1)
+
+    # Verify all positions closed
+    remaining_positions = mt5.positions_get(symbol=symbol)
+    if remaining_positions:
+        logging.warning(f"Some trades could not be closed. Remaining trades: {len(remaining_positions)}")
+    else:
+        logging.info(f"All trades successfully closed for {symbol}.")
+
 
 def place_trade(trade_type, entry_price):
-    # Enforce trade type check every time
-    open_type = get_open_trade_type()
-    if open_type and open_type != trade_type:
-        logging.info(f"Reversing trade for {symbol} from {open_type} to {trade_type}")
+    # Before placing a new trade, make sure there are no lingering positions
+    positions = mt5.positions_get(symbol=symbol)
+    if positions:
+        logging.info(f"Detected {len(positions)} open trades for {symbol} before placing new {trade_type} trade. Closing all first.")
         close_all_trades()
 
-    elif open_type == trade_type:
-        logging.info(f"Skipping {trade_type} trade for {symbol} - already in {trade_type} trade")
-        return False
+        # Check again to ensure all trades are actually closed
+        time.sleep(1)
+        if mt5.positions_get(symbol=symbol):
+            logging.error(f"Cannot place new {trade_type} trade, existing trades failed to close.")
+            return False
 
     price = mt5.symbol_info_tick(symbol).ask if trade_type == "BUY" else mt5.symbol_info_tick(symbol).bid
 
@@ -116,6 +133,7 @@ def place_trade(trade_type, entry_price):
     }
     logging.info(f"Placing {trade_type} trade for {symbol} at {price}")
     logging.info(f"SL: {request['sl']} | TP: {request['tp']}")
+
     result = mt5.order_send(request)
     if result.retcode == mt5.TRADE_RETCODE_DONE:
         logging.info(f"{trade_type} trade placed for {symbol} at {price}")

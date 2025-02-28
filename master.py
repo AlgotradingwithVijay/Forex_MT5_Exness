@@ -6,13 +6,13 @@ import time
 # Dictionary storing different parameters for each symbol
 symbol_configs = {
     "BTCUSDm":   {"lot_size": 0.09, "profit_target": 5, "sl_trailing_trigger": 10, "sl_trailing_adjustment": 2, "timeframe": "M1", "interval_minutes": 1,"sl": 3,"tp": 1},
-    "EURUSDm":   {"lot_size": 0.1,  "profit_target": 3, "sl_trailing_trigger": 8,  "sl_trailing_adjustment": 1.5, "timeframe": "M1", "interval_minutes": 1,"sl": 3,"tp": 1},
-    "GBPUSDm":   {"lot_size": 0.08, "profit_target": 4, "sl_trailing_trigger": 9,  "sl_trailing_adjustment": 1.8, "timeframe": "M1", "interval_minutes": 1,"sl": 3,"tp": 1},
+    "EURUSDm":   {"lot_size": 0.03,  "profit_target": 3, "sl_trailing_trigger": 8,  "sl_trailing_adjustment": 1.5, "timeframe": "M1", "interval_minutes": 1,"sl": 0.04,"tp": 0.04},
+    "GBPUSDm":   {"lot_size": 0.03, "profit_target": 4, "sl_trailing_trigger": 9,  "sl_trailing_adjustment": 1.8, "timeframe": "M1", "interval_minutes": 1,"sl": 3,"tp": 1},
     "USDJPYm":   {"lot_size": 0.07, "profit_target": 6, "sl_trailing_trigger": 12, "sl_trailing_adjustment": 2.5, "timeframe": "M1", "interval_minutes": 1,"sl": 3,"tp": 1},
     "USDCADm":   {"lot_size": 0.05, "profit_target": 3, "sl_trailing_trigger": 7,  "sl_trailing_adjustment": 1.2, "timeframe": "M1", "interval_minutes": 1,"sl": 3,"tp": 1},
-    "AUDUSDm":   {"lot_size": 0.06, "profit_target": 4, "sl_trailing_trigger": 2,  "sl_trailing_adjustment": 0.6, "timeframe": "M1", "interval_minutes": 1,"sl": 3,"tp": 1},
-    "NZDUSDm":   {"lot_size": 0.04, "profit_target": 2, "sl_trailing_trigger": 5,  "sl_trailing_adjustment": 2, "timeframe": "M1", "interval_minutes": 1,"sl": 3,"tp": 1},
-    "XAUUSDm":   {"lot_size": 0.09,  "profit_target": 10, "sl_trailing_trigger": 15, "sl_trailing_adjustment": 3, "timeframe": "M1", "interval_minutes": 1,"sl": 3,"tp": 1},
+    "AUDUSDm":   {"lot_size": 0.06, "profit_target": 1, "sl_trailing_trigger": 2,  "sl_trailing_adjustment": 0.6, "timeframe": "M1", "interval_minutes": 1,"sl": .1,"tp": .2},
+    "NZDUSDm":   {"lot_size": 0.04, "profit_target": 2, "sl_trailing_trigger": 5,  "sl_trailing_adjustment": 2, "timeframe": "M1", "interval_minutes": 1,"sl": .1,"tp": .2},
+    "XAUUSDm":   {"lot_size": 0.09,  "profit_target": 10, "sl_trailing_trigger": 15, "sl_trailing_adjustment": 3, "timeframe": "M1", "interval_minutes": 1,"sl": 2,"tp": 3},
     "USTECm":    {"lot_size": 0.09,  "profit_target": 7,  "sl_trailing_trigger": 11, "sl_trailing_adjustment": 2.2, "timeframe": "M1", "interval_minutes": 1,"sl": 3,"tp": 1},
     "USOILm":    {"lot_size": 0.09,  "profit_target": 5,  "sl_trailing_trigger": 9,  "sl_trailing_adjustment": 1.5, "timeframe": "M1", "interval_minutes": 1,"sl": 3,"tp": 1},
 }
