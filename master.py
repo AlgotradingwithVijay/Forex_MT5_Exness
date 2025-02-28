@@ -21,12 +21,12 @@ symbol_configs = {
 PYTHON_EXECUTABLE = ".venv\Scripts\python.exe"  # Use "python" for Windows
 
 # Centralized log file
-log_file = "all_trades.log"
-err_file = "all_trades_error.log"
+
 
 # Store subprocess references
 processes = {}
-
+log_file = "All_trades.log"
+err_file = "All_trades_error.log"
 # Start a subprocess for each symbol
 with open(log_file, "w") as out, open(err_file, "w") as err:
     for symbol, config in symbol_configs.items():
