@@ -4,22 +4,44 @@ import time
 import pytz
 from datetime import datetime, timedelta
 import sys
+import logging
+from datetime import datetime
 
 
-
-# Get the trading symbol from command-line arguments
-if len(sys.argv) < 2:
-    print("Usage: python child.py <symbol>")
+# Validate arguments
+if len(sys.argv) < 10:
+    logging.info("Usage: python child.py <symbol> <lot_size> <profit_target> <sl_trailing_trigger> <sl_trailing_adjustment> <timeframe> <interval_minutes>")
     sys.exit(1)
 
-symbol = sys.argv[1]
+# Set up centralized logging
+log_file = "all_trades.log"
+logging.basicConfig(
+    filename=log_file, 
+    level=logging.INFO, 
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
 
-# Simulate processing for this symbol
-print(f"Processing trades for {symbol}...")
+# Receive arguments from master.py
+symbol = sys.argv[1]
+lot_size = float(sys.argv[2])
+profit_target = float(sys.argv[3])
+sl_trailing_trigger = float(sys.argv[4])
+sl_trailing_adjustment = float(sys.argv[5])
+timeframe = sys.argv[6]
+interval_minutes = int(sys.argv[7])
+sl = int(sys.argv[8])
+tp = int(sys.argv[9])
+
+
+# Log received parameters
+logging.info(f"Started trading for {symbol} with Lot Size: {lot_size}, Profit Target: {profit_target}, SL Trailing Trigger: {sl_trailing_trigger}, SL Adjustment: {sl_trailing_adjustment}, Timeframe: {timeframe}")
+
+
 
 # Connect to MT5
 if not mt5.initialize():
-    print("MT5 initialization failed")
+    logging.info("MT5 initialization failed")
     quit()
 
 # Configurable variables
@@ -50,14 +72,14 @@ def close_trade(symbol):
     """Close the existing trade for the given symbol"""
     trade = get_open_trade(symbol)
     if not trade:
-        print(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] No open trade found for {symbol}, skipping close request.")
+        logging.info(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] No open trade found for {symbol}, skipping close request.")
         return False  # No trade to close
 
     order_type = mt5.ORDER_TYPE_SELL if trade.type == mt5.ORDER_TYPE_BUY else mt5.ORDER_TYPE_BUY
     close_price = mt5.symbol_info_tick(symbol).bid if order_type == mt5.ORDER_TYPE_SELL else mt5.symbol_info_tick(symbol).ask
 
     if close_price is None:
-        print(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Failed to get close price for {symbol}.")
+        logging.info(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Failed to get close price for {symbol}.")
         return False
 
     close_request = {
@@ -76,14 +98,14 @@ def close_trade(symbol):
     result = mt5.order_send(close_request)
 
     if result is None:
-        print(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Order send failed for {symbol}.")
+        logging.info(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Order send failed for {symbol}.")
         return False
 
     if result.retcode == mt5.TRADE_RETCODE_DONE:
-        print(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Successfully closed trade for {symbol}.")
+        logging.info(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Successfully closed trade for {symbol}.")
         return True
     else:
-        print(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Close trade failed for {symbol}, error code: {result.retcode}")
+        logging.info(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Close trade failed for {symbol}, error code: {result.retcode}")
         return False
 
 def get_data(symbol):
@@ -126,7 +148,7 @@ def place_trade(symbol, entry_price, trade_type):
     
     order = mt5.order_send(request)
     if order.retcode == mt5.TRADE_RETCODE_DONE:
-        print(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] {trade_type} Trade executed successfully for {symbol} at {entry_price}")
+        logging.info(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] {trade_type} Trade executed successfully for {symbol} at {entry_price}")
         open_trades[symbol] = order.order
         return order.order
     return None
@@ -156,7 +178,7 @@ def check_trailing_stop(symbol):
         }
         result = mt5.order_send(update_request)
         if result.retcode == mt5.TRADE_RETCODE_DONE:
-            print(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Updated SL for {symbol}")
+            logging.info(f"[{datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')}] Updated SL for {symbol}")
 
 # Wait for next exact interval
 def wait_for_next_interval():
@@ -171,7 +193,7 @@ def wait_for_next_interval():
     next_run_time = now.replace(hour=next_hour, minute=next_minute, second=0, microsecond=0)
     wait_time = (next_run_time - now).total_seconds()
     
-    print(f"Waiting until {next_run_time.strftime('%Y-%m-%d %H:%M:%S IST')} to start execution...")
+    logging.info(f"Waiting until {next_run_time.strftime('%Y-%m-%d %H:%M:%S IST')} to start execution...")
     time.sleep(wait_time)
 
 # Start at next interval
@@ -186,7 +208,7 @@ while True:
             if trade and trade.type != (mt5.ORDER_TYPE_BUY if trade_type == "BUY" else mt5.ORDER_TYPE_SELL):
                 close_trade(symbol)
 
-            print(f"[{candle_time}] Monitoring {symbol} every second for {trade_type} entry at {trigger_point}")
+            logging.info(f"[{candle_time}] Monitoring {symbol} every second for {trade_type} entry at {trigger_point}")
             while True:
                 current_price = get_current_price(symbol)
 
