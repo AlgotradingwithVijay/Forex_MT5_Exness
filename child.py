@@ -175,12 +175,21 @@ def check_entry_condition():
 
 def watch_price(trigger_point, trade_type):
     logging.info(f"Watching price for {symbol} {trade_type} entry at {trigger_point}")
-
+    last_log_time = time.time()
+    now = datetime.now(ist)
+    SingalLogTime=  now.strftime('%Y-%m-%d %H:%M:%S')
+    SignalFoundTime = f"Single was found at {SingalLogTime} for {symbol} {trade_type} entry at {trigger_point}"
     while True:
         price = get_current_price()
+
         if (trade_type == "BUY" and price <= trigger_point) or (trade_type == "SELL" and price >= trigger_point):
             if place_trade(trade_type, trigger_point):
+                logging.info(f'{SignalFoundTime}')
                 return
+        current_time = time.time()
+        if current_time - last_log_time >= 15:
+            logging.info(f"{symbol} Current price: {price} and {trigger_point}")
+            last_log_time = current_time
         time.sleep(1)
 
 def wait_for_next_candle():
